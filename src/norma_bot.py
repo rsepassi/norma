@@ -30,13 +30,9 @@ class NormaBot:
         self.anthropic_api_base = os.environ.get('ANTHROPIC_API_BASE', 'https://api.anthropic.com')
         
         # Load prompt from file
-        prompt_file = os.environ.get('PROMPT_FILE', 'prompt.txt')
-        try:
-            with open(prompt_file, 'r') as f:
-                self.base_prompt = f.read().strip()
-        except FileNotFoundError:
-            print(f"Warning: {prompt_file} not found, using default prompt")
-            self.base_prompt = "You are a helpful Twitter bot. Please generate a response to the following tweet:"
+        prompt_file = os.environ.get('PROMPT_FILE', 'src/prompt.txt')
+        with open(prompt_file, 'r') as f:
+            self.base_prompt = f.read().strip()
         
         # Optional configuration with defaults
         self.max_mentions = int(os.environ.get('MAX_MENTIONS_PER_RUN', '10'))
