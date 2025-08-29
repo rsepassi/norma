@@ -11,7 +11,7 @@ A simple Twitter bot that:
 
 ### Core Components
 
-#### 1. Main Script (`norma_bot.py`)
+#### 1. Main Script (`src/norma_bot.py`)
 - Single Python script that runs periodically (e.g., every 5 minutes via cron)
 - Stateless execution - each run is independent
 - Processes mentions sequentially with error isolation
@@ -88,7 +88,7 @@ Environment variables loaded from `.env` file:
 **Configuration:**
 - API Key for authentication
 - Model selection (defaults to claude-sonnet-4-20250514)
-- Base prompt loaded from `prompt.txt` file
+- Base prompt loaded from `src/prompt.txt` file
 
 **Request Format to Anthropic API:**
 ```json
@@ -135,19 +135,3 @@ Environment variables loaded from `.env` file:
 3. **Resilient**: Failures isolated per mention
 4. **Observable**: Everything logged to SQLite
 5. **Maintainable**: ~350 lines of straightforward Python
-
-## File Structure
-
-```
-norma/
-├── norma_bot.py      # Main bot implementation
-├── run_bot.sh        # Execution wrapper
-├── prompt.txt        # Base prompt for Claude
-├── .env              # Configuration (git-ignored)
-├── .env.example      # Configuration template
-├── requirements.txt  # Python dependencies
-├── norma_bot.db      # SQLite database (auto-created)
-├── bot.log          # Execution logs (from cron)
-└── doc/
-    └── design.md     # This document
-```

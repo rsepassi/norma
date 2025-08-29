@@ -46,8 +46,8 @@ ANTHROPIC_API_KEY=your-anthropic-api-key
 
 # Optional settings (defaults shown)
 ANTHROPIC_MODEL=claude-sonnet-4-20250514
-PROMPT_FILE=prompt.txt
-DB_PATH=norma_bot.db
+PROMPT_FILE=src/prompt.txt
+DB_PATH=live/norma_bot.db
 MAX_MENTIONS_PER_RUN=10
 API_TIMEOUT_SECONDS=30
 ```
@@ -63,12 +63,12 @@ chmod 600 .env
 
 Run the bot once manually:
 ```bash
-./run_bot.sh
+./cmd/run_bot.sh
 ```
 
 Or directly with Python:
 ```bash
-source .env && python3 norma_bot.py
+source .env && python3 src/norma_bot.py
 ```
 
 ### Automated Scheduling (Cron)
@@ -82,12 +82,12 @@ crontab -e
 
 2. Add this line (adjust path as needed):
 ```bash
-*/5 * * * * /path/to/norma/run_bot.sh >> /path/to/norma/bot.log 2>&1
+*/5 * * * * /path/to/norma/cmd/run_bot.sh >> /path/to/norma/live/bot.log 2>&1
 ```
 
 ## Prompt Configuration
 
-Create a `prompt.txt` file with your base prompt for Claude. This prompt will be prepended to the tweet content when generating responses.
+Create a `src/prompt.txt` file with your base prompt for Claude. This prompt will be prepended to the tweet content when generating responses.
 
 Example `prompt.txt`:
 ```
@@ -105,17 +105,17 @@ The bot uses SQLite to track:
 
 View recent activity:
 ```sql
-sqlite3 norma_bot.db "SELECT * FROM processed_mentions ORDER BY processed_at DESC LIMIT 10;"
+sqlite3 live/norma_bot.db "SELECT * FROM processed_mentions ORDER BY processed_at DESC LIMIT 10;"
 ```
 
 Check failure rate:
 ```sql
-sqlite3 norma_bot.db "SELECT status, COUNT(*) FROM processed_mentions WHERE processed_at > datetime('now', '-1 day') GROUP BY status;"
+sqlite3 live/norma_bot.db "SELECT status, COUNT(*) FROM processed_mentions WHERE processed_at > datetime('now', '-1 day') GROUP BY status;"
 ```
 
 ## Monitoring
 
-- Check `bot.log` for execution history (if using cron)
+- Check `live/bot.log` for execution history (if using cron)
 - Query the SQLite database for processing statistics
 - Monitor the `api_logs` table for debugging API issues
 
@@ -131,13 +131,24 @@ The bot handles errors gracefully:
 
 ```
 norma/
-├── norma_bot.py      # Main bot script
-├── run_bot.sh        # Wrapper script for cron
+├── src/
+│   ├── norma_bot.py  # Main bot script
+│   └── prompt.txt    # Claude prompt configuration
+├── cmd/
+│   ├── run_bot.sh    # Wrapper script for cron
+│   └── run_test_server.sh  # Test server launcher
+├── live/
+│   ├── norma_bot.db  # SQLite database (auto-created)
+│   └── bot.log       # Execution log (if using cron)
+├── test/
+│   └── test_server.py  # Test server implementation
+├── api-demos/          # Twitter API example scripts
+│   ├── ...
+├── doc/
+│   └── design.md     # Design documentation
 ├── .env              # Configuration (create from .env.example)
 ├── .env.example      # Example configuration
-├── requirements.txt  # Python dependencies
-├── norma_bot.db      # SQLite database (auto-created)
-└── bot.log          # Execution log (if using cron)
+└── requirements.txt  # Python dependencies 
 ```
 
 ## Security Notes
