@@ -22,7 +22,17 @@ class NormaBot:
         
         # Bot configuration
         self.bot_user_id = os.environ['BOT_USER_ID']
-        self.content_api_url = os.environ['CONTENT_API_URL']
+        self.anthropic_api_key = os.environ['ANTHROPIC_API_KEY']
+        self.anthropic_model = os.environ.get('ANTHROPIC_MODEL', 'claude-sonnet-4-20250514')
+        
+        # Load prompt from file
+        prompt_file = os.environ.get('PROMPT_FILE', 'prompt.txt')
+        try:
+            with open(prompt_file, 'r') as f:
+                self.base_prompt = f.read().strip()
+        except FileNotFoundError:
+            print(f"Warning: {prompt_file} not found, using default prompt")
+            self.base_prompt = "You are a helpful Twitter bot. Please generate a response to the following tweet:"
         
         # Optional configuration with defaults
         self.max_mentions = int(os.environ.get('MAX_MENTIONS_PER_RUN', '10'))
@@ -154,16 +164,18 @@ class NormaBot:
         return None
     
     def generate_response(self, original_tweet, mention):
-        """Call content API to generate response"""
+        """Call Anthropic API to generate response"""
+        # Prepare the message content
+        tweet_context = f"\n\nOriginal tweet: {original_tweet['text']}\n\nMention: {mention['text']}"
+        full_content = self.base_prompt + tweet_context
+        
+        # Prepare Anthropic API payload
         payload = {
-            "original_tweet": {
-                "id": original_tweet['id'],
-                "text": original_tweet['text']
-            },
-            "mention": {
-                "id": mention['id'],
-                "text": mention['text']
-            }
+            "model": self.anthropic_model,
+            "max_tokens": 1024,
+            "messages": [
+                {"role": "user", "content": full_content}
+            ]
         }
         
         # Log the API request
@@ -171,7 +183,12 @@ class NormaBot:
         
         try:
             response = requests.post(
-                self.content_api_url,
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": self.anthropic_api_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json"
+                },
                 json=payload,
                 timeout=self.api_timeout
             )
@@ -179,9 +196,15 @@ class NormaBot:
             if response.status_code == 200:
                 data = response.json()
                 self.log_api_request(mention['id'], 'content_generation', payload, data)
-                return data.get('response_text')
+                
+                # Extract the text from the response
+                if data.get('content') and len(data['content']) > 0:
+                    response_text = data['content'][0].get('text', '')
+                    return response_text
+            else:
+                print(f"Anthropic API error: {response.status_code} - {response.text}")
         except Exception as e:
-            print(f"Content API error: {e}")
+            print(f"Anthropic API error: {e}")
         
         return None
     

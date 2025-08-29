@@ -4,7 +4,7 @@
 A simple Twitter bot that:
 1. Checks for mentions periodically (via cron job)
 2. Finds the original tweet being referenced
-3. Sends tweet content to an API for response generation
+3. Sends tweet content to Anthropic's Claude API for response generation
 4. Posts the response as a reply
 
 ## Architecture
@@ -67,7 +67,7 @@ CREATE TABLE bot_state (
    - For each mention:
      - Skip if already processed
      - Get referenced tweet context
-     - Generate response via content API
+     - Generate response via Anthropic Claude API
      - Post reply to Twitter
      - Log status in database
 
@@ -80,31 +80,32 @@ CREATE TABLE bot_state (
 
 Environment variables loaded from `.env` file:
 - **Twitter Credentials**: Bearer token, OAuth keys
-- **Bot Settings**: User ID, Content API URL
+- **Bot Settings**: User ID, Anthropic API key, Model selection
 - **Optional**: Database path, mention limits, API timeout
 
-## Content API Interface
+## Anthropic API Integration
 
-**Request Format:**
+**Configuration:**
+- API Key for authentication
+- Model selection (defaults to claude-sonnet-4-20250514)
+- Base prompt loaded from `prompt.txt` file
+
+**Request Format to Anthropic API:**
 ```json
 {
-  "original_tweet": {
-    "id": "tweet_id",
-    "text": "original tweet content"
-  },
-  "mention": {
-    "id": "mention_id", 
-    "text": "mention text"
-  }
+  "model": "claude-sonnet-4-20250514",
+  "max_tokens": 1024,
+  "messages": [
+    {
+      "role": "user",
+      "content": "[prompt from file] + tweet context"
+    }
+  ]
 }
 ```
 
-**Response Format:**
-```json
-{
-  "response_text": "Generated response text"
-}
-```
+**Response Parsing:**
+- Extract text from `content[0].text` in the response
 
 ## Deployment Strategy
 
@@ -141,6 +142,7 @@ Environment variables loaded from `.env` file:
 norma/
 ├── norma_bot.py      # Main bot implementation
 ├── run_bot.sh        # Execution wrapper
+├── prompt.txt        # Base prompt for Claude
 ├── .env              # Configuration (git-ignored)
 ├── .env.example      # Configuration template
 ├── requirements.txt  # Python dependencies

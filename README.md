@@ -1,12 +1,12 @@
 # Norma Bot
 
-A simple Twitter bot that monitors mentions and generates responses using an external content API.
+A simple Twitter bot that monitors mentions and generates responses using Anthropic's Claude API.
 
 ## Features
 
 - Monitors Twitter mentions periodically
 - Processes referenced tweets to understand context
-- Generates responses via external API
+- Generates responses via Anthropic's Claude API
 - Posts replies automatically
 - Tracks processed mentions to avoid duplicates
 - Logs all API interactions for debugging
@@ -15,7 +15,7 @@ A simple Twitter bot that monitors mentions and generates responses using an ext
 
 - Python 3.6+
 - Twitter API credentials (Bearer Token and OAuth 1.0a)
-- External content generation API endpoint
+- Anthropic API key
 
 ## Installation
 
@@ -42,9 +42,11 @@ TWITTER_ACCESS_SECRET=your-access-secret
 
 # Required bot configuration
 BOT_USER_ID=your-bot-twitter-user-id
-CONTENT_API_URL=https://your-api.com/generate
+ANTHROPIC_API_KEY=your-anthropic-api-key
 
 # Optional settings (defaults shown)
+ANTHROPIC_MODEL=claude-sonnet-4-20250514
+PROMPT_FILE=prompt.txt
 DB_PATH=norma_bot.db
 MAX_MENTIONS_PER_RUN=10
 API_TIMEOUT_SECONDS=30
@@ -83,32 +85,16 @@ crontab -e
 */5 * * * * /path/to/norma/run_bot.sh >> /path/to/norma/bot.log 2>&1
 ```
 
-## Content API Requirements
+## Prompt Configuration
 
-Your content generation API should:
-- Accept POST requests with JSON payload
-- Return JSON with a `response_text` field
-- Handle this request format:
+Create a `prompt.txt` file with your base prompt for Claude. This prompt will be prepended to the tweet content when generating responses.
 
-```json
-{
-  "original_tweet": {
-    "id": "tweet_id",
-    "text": "original tweet content"
-  },
-  "mention": {
-    "id": "mention_id",
-    "text": "mention text"
-  }
-}
+Example `prompt.txt`:
+```
+You are a helpful Twitter bot. Generate a concise, relevant response to the following tweet interaction.
 ```
 
-Expected response:
-```json
-{
-  "response_text": "Generated response text"
-}
-```
+The bot will append the original tweet and mention text to your prompt when calling the Anthropic API.
 
 ## Database
 
