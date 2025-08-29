@@ -25,6 +25,10 @@ class NormaBot:
         self.anthropic_api_key = os.environ['ANTHROPIC_API_KEY']
         self.anthropic_model = os.environ.get('ANTHROPIC_MODEL', 'claude-sonnet-4-20250514')
         
+        # API endpoint configuration (for testing)
+        self.twitter_api_base = os.environ.get('TWITTER_API_BASE', 'https://api.twitter.com')
+        self.anthropic_api_base = os.environ.get('ANTHROPIC_API_BASE', 'https://api.anthropic.com')
+        
         # Load prompt from file
         prompt_file = os.environ.get('PROMPT_FILE', 'prompt.txt')
         try:
@@ -90,7 +94,7 @@ class NormaBot:
     
     def fetch_mentions(self, since_id=None):
         """Get new mentions from Twitter"""
-        url = f"https://api.twitter.com/2/users/{self.bot_user_id}/mentions"
+        url = f"{self.twitter_api_base}/2/users/{self.bot_user_id}/mentions"
         headers = {"Authorization": f"Bearer {self.bearer_token}"}
         params = {
             "tweet.fields": "referenced_tweets,created_at,author_id",
@@ -153,7 +157,7 @@ class NormaBot:
     
     def get_tweet(self, tweet_id):
         """Fetch a specific tweet by ID"""
-        url = f"https://api.twitter.com/2/tweets/{tweet_id}"
+        url = f"{self.twitter_api_base}/2/tweets/{tweet_id}"
         headers = {"Authorization": f"Bearer {self.bearer_token}"}
         params = {"tweet.fields": "text,author_id,created_at"}
         
@@ -183,7 +187,7 @@ class NormaBot:
         
         try:
             response = requests.post(
-                "https://api.anthropic.com/v1/messages",
+                f"{self.anthropic_api_base}/v1/messages",
                 headers={
                     "x-api-key": self.anthropic_api_key,
                     "anthropic-version": "2023-06-01",
@@ -210,7 +214,7 @@ class NormaBot:
     
     def post_response(self, mention, response_text):
         """Post a reply to Twitter"""
-        url = "https://api.twitter.com/2/tweets"
+        url = f"{self.twitter_api_base}/2/tweets"
         
         # Post as a reply
         payload = {
